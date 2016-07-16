@@ -1,0 +1,339 @@
+#!/bin/bash
+# ______           _                      _       
+# | ___ \         | |                    | |      
+# | |_/ / __ _ ___| |__       _ __   ___ | |_ ___ 
+# | ___ \/ _` / __| '_ \_____| '_ \ / _ \| __/ _ \
+# | |_/ / (_| \__ \ | | |____| | | | (_) | | ' __/
+# \____/ \__,_|___/_| |_|    |_| |_|\___/ \__\___|
+#                                    by Maboroshy
+#
+# THIS SCRIPT COMES WITHOUT ANY WARRANTY
+# ANY DAMAGE DONE TO YOUR FILES IS ALL YOUR FAULT
+
+if [[ $1 == -h ]] || [[ $1 == --help ]]; then echo \
+"Bash-note, version 0.1.1
+
+Bash-note is as set of small scripts called modules. 
+There are two types of modules: 
+1) modules evoked by file system watcher on specific file types;
+2) modules evoked by running bash-note with specific argument.
+
+Bash-note stores its settings inside the script file in config section.
+
+Usage:
+bash-note                   Run file system watcher for directory set in config section
+bash-note -w DIRECTORY      Run file system watcher for DIRECTORY
+
+bash-note -d                List and check module dependencies (binaries used in module)
+
+bash-note -i FILE           Import bash-note settings from FILE
+
+bash-note -c                Run Clipnote module with inbox file set in config section
+bash-note -c FILE           Run Clipnote module with FILE as inbox file
+"; exit; fi
+
+# Don't change section markers with CAPS below or importing settings won't work.
+
+#####################################################
+# CONFIG SECTION: Set options for each module here. #
+#####################################################
+
+## General configuration ##
+##-----------------------##
+
+# Directory that stores notes or stores sub-directories with notes. 
+note_root_dir="/storage/emulated/0/Android/data/com.ryeeeeee.markdownx/files/notes/Test"
+
+# File extension which is considered as main note extension. Can be "md", "txt" or whatever. 
+# Anyway script considers that there will be markdown syntax inside it.
+main_note_extension="md"
+
+
+## Notifications ##
+##---------------##
+
+### Duration of notifications in msec (1000 = 1 sec). Put 0 to disable notifications.
+notifications_duration=3000
+
+### Optional icons for notifications. Defaults are from KDE Plasma 5 Breeze icon set.
+icon_success="emblem-success.svg"
+icon_warning="emblem-warning.svg"
+
+
+## Clipnote: pastes selected text to note ##
+##----------------------------------------##
+
+# Put inbox note file name here. Can have absolute path, otherwise file will be stored in inbox directory.
+clipnote_inbox_file_name="$note_root_dir/!Inbox.$main_note_extension"
+
+# Entry sorting mode: newer_first or older_first
+clipnote_sorting_mode=newer_first
+
+
+## Web2note: converts web pages to markdown notes ##
+##------------------------------------------------##
+
+# Put 1 to enable, anything other do disable.
+web2note_enabled=1
+
+# Web page files directory appendix. Firefox and Chromium save linked files in "NAME_files" directory. 
+# Don't name other directories like that or bad thing can happen to files there!
+web_page_files_dir_app="_files"
+
+
+## Fast_notes_merger: adds fast notes to a single main note ##
+##----------------------------------------------------------##
+
+# Put 1 to enable, anything other do disable.
+fast_notes_merger_enabled=1
+
+# Extension of files which are considered as "fast notes" and should be merged.
+fast_notes_extension=txt
+
+# Inbox directory. All "fast notes" put there will be added to inbox note.
+fast_notes_merger_inbox_dir="$note_root_dir"
+
+# Put inbox note file name here. Can have absolute path, otherwise will be stored in inbox directory. 
+# Can be the same as for Clipnote module.
+fast_notes_inbox_file_name="!Inbox.$main_note_extension"
+
+# Entry sorting mode: newer_first or older_first
+fast_notes_sorting_mode=newer_first
+
+
+##########################################################################
+# CODE SECTION: Don't change anything here... unless you really want to. #
+##########################################################################
+
+IFS=$'\n'
+
+### Check if main note directory path contains special characters. If it does - notify and stop the script.
+if [[ $note_root_dir == *[#\\\"]* ]] ; then 
+    notify fail "Bash-note stopped: Bad note directory name" \
+        "$note_root_dir contains special characters. Please rename note directory or higher level directories."
+    exit
+fi
+
+##===========##
+## Functions ##
+##===========##
+
+### Show notification: notify done|fail SUMMARY BODY
+notify () {
+if [[ $notifications_duration != 0 ]]; then
+    [[ $1 == done ]] && notify-send -i "$icon_success" -t $notifications_duration "$2" "$3"
+    [[ $1 == fail ]] && notify-send -i "$icon_warning" -t $notifications_duration "$2" "$3"
+fi
+} 
+
+### Check if binary present: check_command BINARY
+check_command () { hash "$1" && echo "FOUND" || echo "NOT FOUND" ;}
+
+
+##====================================================##
+## One-shot scripts called by commands line arguments ##
+##====================================================##
+
+
+## Dependencies checker: checks for binaries used in modules ##
+##---------------------------------------------------------##
+
+if [[ $1 == -d ]]; then echo \
+"Module dependencies:
+
+DE notifications:
+        libnotify           $(check_command notify-send)
+
+File system watcher:
+        inotify-tools       $(check_command inotifywait)
+    
+Clipnote:
+        xclip               $(check_command xclip)
+        iconv               $(check_command iconv)
+        pandoc              $(check_command pandoc)
+        wget                $(check_command wget)
+
+Web2note:        
+        iconv               $(check_command iconv)
+        pandoc              $(check_command pandoc)
+
+Fast notes merger:          
+        No dependencies
+"; exit; fi
+
+## Settings importer: imports config from another bash-note file ##
+##-----------------------------------------------------------------------##
+
+if [[ $1 == -i ]] && [[ ! -z "$2" ]]; then
+
+    ### Get all setting from config section of the old file.
+    for setting_string in $(sed -n '/CONFIG SECTION: /,/CODE SECTION: /p' "$2" | grep -ve '#' -ve ^$); do
+
+        ### Replace all setting in this file with setting existing in the old file. 
+        ### If this (running) file have some new setting types - they stay.
+        setting_name=${setting_string%=*}
+        sed -i "s/^$setting_name.*/$setting_string/" "$(readlink -f "$0")"
+    done
+
+    [[ $? == 0 ]] && notify done "Bash-note: Settings imported" \
+    "Settings from ${previous_version_file_name##*/} imported to running script."
+fi
+
+## Clipnote: pastes selected text to note ##
+##----------------------------------------##
+
+if [[ $1 == -c ]]; then
+    
+    ### If there is a second command line argument, take it as inbox file name.
+    [[ ! -z "$2" ]] && clipnote_inbox_file_name="$2"
+    
+    ### Check if inbox file and media directory for images exist, otherwise make them.
+    [ -f "$clipnote_inbox_file_name" ] || touch "$clipnote_inbox_file_name"
+    [ -d "$note_root_dir/media/Clipnote" ] || mkdir "$note_root_dir/media/Clipnote"
+    
+    ### Get clipboard content as html and convert it to markdown.
+    IFS=
+    clipnote_html="$(xclip -clip clip -t text/html -o)"
+    clipnote_md="$(printf '%s\n' "$clipnote_html" | iconv -sc -t utf-8 \
+        | pandoc -f html -t markdown_strict+pipe_tables-raw_html)"
+
+    IFS=$'\n'
+    
+    ### Get inline images links, even when their markdown code contains new lines.
+     for img_link in $(printf '%s\n' "$clipnote_md" | sed -n "/^\!\[/,/)/p" \
+      | grep -o 'http.*//[^ )]\+'); do
+
+        ### Download that images to media directory. 
+        ### Adds some unique digits to file names to work around possible duplicates.
+        img_name="${img_link##*/}"
+        uniq=$RANDOM
+        uniq_img_name="$uniq-$img_name"
+        wget -q "$img_link" -O "$note_root_dir/media/Clipnote/$uniq_img_name" &
+        
+        ### Replace links to online images with links to downloaded ones.
+        clipnote_temp=$(printf '%s\n' "$clipnote_md" \
+            | sed "s|$img_link|file://$note_root_dir/media/Clipnote/$uniq_img_name|g")
+        clipnote_md="$clipnote_temp"
+    done
+    
+    ### Add entry to the beginning or to the end of inbox note depending on chosen method.
+    temp_file="$RANDOM"
+    [ $clipnote_sorting_mode = newer_first ] && printf '%s\n\n' "$clipnote_md" \
+        | cat - "$clipnote_inbox_file_name" > "$temp_file" && mv "$temp_file" "$clipnote_inbox_file_name"
+    [ $clipnote_sorting_mode = older_first ] && printf '%s\n\n' "$clipnote_md" >> "$clipnote_inbox_file_name"
+    
+    ### Show notification. There is a function for that.
+    notify done "Selection saved to note."
+    exit
+fi
+        
+##==========================================================================##
+## File watcher loop: gets changed files and pulls them through all modules ##
+##==========================================================================##
+        
+## File system changes watcher ##
+##-----------------------------##
+
+if [[ $1 == -w ]] && [[ ! -z "$2" ]]; then note_root_dir="$2"; fi
+
+### Get the all file system events in note root directory excluding events about hidden directories/files 
+### and "media" directories.
+inotifywait -mrq -e modify -e move --format '%w%f' --exclude '(.*/\..|/media/)' "$note_root_dir" \
+  | while read -r file; do
+
+### Check if there are special symbols in file name or path which will break bash. Notify if true.
+if [[ $file == *[#\\\"]* ]] ; then 
+    notify fail "Bash-note: Bad file name" "$file_name contains special symbols and won't be processed by Bash-note."
+    continue 
+fi
+
+### Check if the file is there or skip it.
+[[ -f "$file" ]] || continue 
+
+### Parse all the file data checked by modules.
+file_path="${file%/*}"
+file_name="${file##*/}"
+file_ext="${file_name##*.}"
+file_mime="$(file -ib "$file")"
+
+
+## Web2note: converts web pages to markdown notes ##
+##------------------------------------------------##
+
+if [[ $web2note_enabled = 1 ]] && [[ ! $file_path =~ "$web_page_files_dir_app" ]] \
+  && [[ $file_ext != "$main_note_extension" ]] && [[ $file_mime =~ text/html ]] ; then
+    
+    ### Wait for browser to check that file is downloaded.
+    sleep 1
+    
+    ### Convert web page to html-less markdown with main note extension.
+    iconv -sc -t utf-8 "$file" \
+    | pandoc -f html -t markdown_strict+pipe_tables-raw_html -o "${file%.*}"."$main_note_extension"
+    
+    ### Put "file://media/" before every image link, even if image tag is multi-line. 
+    ### Images will be put to media directory in the next loop.
+    img_link=$(sed -n "/^\!\[/,/)/p" "${file%.*}"."$main_note_extension" | grep -m 1 "$web_page_files_dir_app")
+    img_link_path=${img_link#*(}
+    img_link_path=${img_link_path%%$web_page_files_dir_app*}
+            
+    sed -i "s|($img_link_path|(file://media/$img_link_path|g" "${file%.*}"."$main_note_extension"
+     
+    ### Check if new note file is there. Show notification and remove converted web page.
+    if [[ -f "${file%.*}"."$main_note_extension" ]]; then 
+        notify done "Bash-note: Web page converted" "${file_name%.*} converted to note"
+        rm "$file" 
+    else notify fail "Bash-note: Web page conversion failed" "${file_name%.*} conversion failed"
+    fi
+fi
+
+if [[ $web2note_enabled = 1 ]] && [[ $file_path =~ "$web_page_files_dir_app" ]] ; then
+    
+    ### Get the relative path of the file beginning with DIRECTORY_files. 
+    web_page_files_dir_name="${file_path%%$web_page_files_dir_app*}"
+    web_page_files_dir_name="${web_page_files_dir_name##*/}"
+    web_page_files_subdir="${file_path##*$web_page_files_dir_app}"
+    web_page_files_relative_path="$web_page_files_dir_name$web_page_files_dir_app$web_page_files_subdir"
+    
+    ### Wait for browser to check that file is downloaded.
+    sleep 1
+    
+    ### Move image files to the same directory in media.
+    if [[ $file_mime =~ image ]]; then
+        [ -d "$note_root_dir/media"/$web_page_files_relative_path ] \
+          || mkdir -p "$note_root_dir/media/$web_page_files_relative_path"
+        mv -f "$file" "$note_root_dir/media/$web_page_files_relative_path/"
+        
+    ### Or delete them if they are not images.
+    else rm -f "$file"
+    fi
+    
+    ### Try to delete empty source directory. Last file will finally do this.
+    rm -d "$file_path"
+fi &
+    
+## Fast_notes_merger: adds fast notes to a single main note ##
+##----------------------------------------------------------##
+
+if [[ $fast_notes_merger_enabled = 1 ]] && [[ $file_path == "$fast_notes_merger_inbox_dir" ]] \
+  && [[ $fast_notes_extension == "$file_ext" ]]; then
+    
+    cd "$fast_notes_merger_inbox_dir" 
+
+    ### Check if inbox file exists, otherwise make one.
+    [ -f "$fast_notes_inbox_file_name" ] || touch "$fast_notes_inbox_file_name"
+
+    ### Get content of a fast note and format it as entry.
+    mod_time=$(date '+%R %a %x' -r "$file")
+    entry=$(printf '%s\n%s\n' "**$mod_time**  " "$(cat "$file")")
+
+    ### Add entry to the beginning or to the end of inbox note depending on chosen method.
+    temp_file="$RANDOM"
+    [ $fast_notes_sorting_mode = newer_first ] && printf '%s\n\n' "$entry" \
+        | cat - "$fast_notes_inbox_file_name" > "$temp_file" && mv "$temp_file" "$fast_notes_inbox_file_name"
+    [ $fast_notes_sorting_mode = older_first ] && printf '%s\n\n' "$entry" >> "$fast_notes_inbox_file_name"
+    
+    ### Delete fast note as it is now added to inbox file.
+    rm -f "$file"
+fi
+
+done ### It's the final "done" of file watcher loop.
