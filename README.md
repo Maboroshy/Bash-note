@@ -7,13 +7,15 @@ There are two types of modules:
 
 Bash-note stores its settings inside the script file in config section.
 
-Usage:
-bash-note                   Run file system watcher for directory set in config section
+Usage: 
+```
+bash-note                   Run file system watcher for directory set in config section  
 bash-note -w DIRECTORY      Run file system watcher for DIRECTORY
 
 bash-note -d                List and check module dependencies (binaries used in module)
 
 bash-note -i FILE           Import bash-note settings from FILE
 
-bash-note -c                Run Clipnote module with inbox file set in config section
+bash-note -c                Run Clipnote module with inbox file set in config section  
 bash-note -c FILE           Run Clipnote module with FILE as inbox file
+```
