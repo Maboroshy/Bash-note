@@ -30,7 +30,7 @@ Usage:
 bash-note                       Run file system watcher for directory set in config section
 bash-note -w DIRECTORY          Run file system watcher for DIRECTORY
 
-bash-note -d                    List and check module dependancies (binaries used in module)
+bash-note -d                    List and check module dependencies (binaries used in module)
 
 bash-note -i FILE               Import bash-note settings from FILE
 
@@ -281,8 +281,8 @@ if [[ $1 == -c ]]; then
     exit
 fi
 
-## Relink: find and proccess links and linked files ##
-##--------------------------------------------------##
+## Relink: find and process links and linked files ##
+##-------------------------------------------------##
 
 if [[ $1 == -l ]]; then
 
