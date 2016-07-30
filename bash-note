@@ -282,7 +282,7 @@ if [[ $1 == -c ]]; then
 fi
 
 ## Relink: find and process links and linked files ##
-##-------------------------------------------------##
+##--------------------------------------------------##
 
 if [[ $1 == -l ]]; then
 
@@ -485,7 +485,7 @@ done
                 if [[ $convert_confirmed == y ]]; then
                     
                     ### Make sure link have right leading "file:".
-                    ### (file://DIR - relative; file:/DIR - absolute)
+                    ### (file://DIR - absolute,real size; file://DIR - relative; file:///DIR - absolute,scaled)
                     if [[ ${!no_leading_file_links_list[@]} =~ "$id" ]]; then
                         sed -i "/file:/! s|$source_link|file:/$target_link|" "$note_file" \
                           && n_converted=$(($n_converted+1))
@@ -538,12 +538,12 @@ done
                 if [[ $convert_confirmed == y ]]; then
                     
                     ### Make sure link have right leading "file:". 
-                    ### (file://DIR - relative; file:/DIR - absolute)
+                    ### (file://DIR - absolute,real size; file://DIR - relative; file:///DIR - absolute,scaled)
                     if [[ ${!no_leading_file_links_list[@]} =~ "$id" ]]; then
-                        sed -i "s|$source_link|file:$target_link|" "$note_file" \
+                        sed -i "s|$source_link|file://$target_link|" "$note_file" \
                           && n_converted=$(($n_converted+1))
                     else 
-                        sed -i "s|file:/*$source_link|file:$target_link|" "$note_file" \
+                        sed -i "s|file:/*$source_link|file://$target_link|" "$note_file" \
                           && n_converted=$(($n_converted+1))
                     fi
                 else 
