@@ -60,11 +60,11 @@ Usage: `bash-note -l`
 
 Relink is the module that can parse and process links and linked files with various methods. 
 
-It has an interactive mode where you can choose how you want to use it with all necessary information and actions confirmation. You can run it with `bash-note -l`. 
+It has an interactive mode where you can choose how you want to use it with all necessary information and action confirmations. You can run it with `bash-note -l`. 
 
-Before each run Relinks scans note root directory you've set parsing notes for links and getting info about every link. The scan can take a while. You can run the parser in test mode for verbose output and benchmarking with `bash-note -l test` or `bash-note -l t`. It won't write anything to files on this mode.
+Before each run Relinks scans note root directory parsing notes for links and getting info about every link. The scan can take a while. You can run the parser in test mode for verbose output and benchmarking with `bash-note -l test` or `bash-note -l t`. It won't write anything to files in this mode.
 
-All command available in interactive mode can be run with command line arguments after `bash-note -l`. The command run that way will still ask for action confirmation. To surpass them add extra `force` or `f` argument.
+All command available in interactive mode can be run with command line arguments after `bash-note -l`. The command run that way will still ask for action confirmation. To surpass the confirmation add extra `force` or `f` argument.
 
 So if you want to cleanup your media directory from unused images you can:  
 1) Run `bash-note -l`;  
@@ -73,7 +73,7 @@ So if you want to cleanup your media directory from unused images you can:
 
 Or you can make all the following by running `bash-note -l cleanup force` or `bash-note -l c f`.
 
-Some actions like conversion of links have a verbose test run mode that can be run on the confirmation stage by typing `t` instead of confirming `y`. Such tests can also be run by adding `test` or `t` as command line argument instead of `force` or `f`.
+Some actions like conversion of links have a verbose test run mode that can be run on the confirmation stage by typing `t` instead of confirming `y`. Such tests can also be run by adding `test` or `t` as command line argument instead of `force` or `f`. This tests also won't write anything.
 
 Run `bash-note -h` to see all command line arguments.
 
