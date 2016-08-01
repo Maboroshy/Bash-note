@@ -10,7 +10,7 @@
 # THIS SCRIPT COMES WITHOUT ANY WARRANTY
 # ANY DAMAGE DONE TO YOUR FILES IS ALL YOUR FAULT
 
-if [[ $1 == -h ]] || [[ $1 == --help ]]; then echo \ 
+if [[ $1 == -h ]] || [[ $1 == --help ]]; then echo \
 "Bash-note, version 0.2.0
 
 Bash-note is as set of small scripts called modules which are supposed to help you 
@@ -229,7 +229,7 @@ if [[ $1 == -i ]] && [[ ! -z "$2" ]]; then
     done
 
     [[ $? == 0 ]] && notify done "Bash-note: Settings imported" \
-    "Settings from ${previous_version_file_name##*/} imported to running script."
+    "Settings from $2 imported to current script."
 fi
 
 ## Clipnote: pastes selected text to note ##
@@ -241,7 +241,7 @@ if [[ $1 == -c ]]; then
     [[ ! -z "$2" ]] && clipnote_inbox_file_name="$2"
     
     ### Check if inbox file and media directory for images exist, otherwise make them.
-    cd $note_root_dir
+    cd "$note_root_dir"
     [ -f "$clipnote_inbox_file_name" ] || touch "$clipnote_inbox_file_name"
     [ -d "$note_root_dir/media/Clipnote" ] || mkdir -p "$note_root_dir/media/Clipnote"
     
@@ -308,16 +308,18 @@ declare -A note_links_list
 reference_style_brackets='\[[^]]*]: *<[^>]*>'
 reference_style_space='\[[^]]*]: *[^ ]* '
 
+printf '%s\n\n' "Scanning notes..."
+
 ### Parse all links in all notes.
 for note_file in ${note_files_list[@]}; do
     
     ### Print note file name in test mode. The bold way. 
     if [[ $2 == t ]] || [[ $2 == test ]]; then
-        printf '\n\033[1m%s\n\033[0m' "FILE $note_file"
+        printf '\n\033[1m%s\033[0m' "FILE $note_file"
     fi
     
     ### Get any markdown link code. Truncating enables multi-line link code but doubles run time.
-    for md_link in $(cat $note_file | tr '\n' ' ' \
+    for md_link in $(cat "$note_file" | tr '\n' ' ' \
       | grep -o -e '!\[[^[]*] *([^(]*)' -e '\[[^]]*] *([^)]*)' -e '\[[^]]*]: *<[^>]*>' -e '\[[^]]*]: *[^ ]* '); do
         
         ### Set link unique ID and put it to markdown links list 
@@ -380,7 +382,7 @@ for note_file in ${note_files_list[@]}; do
           printf '\n%s\n%s\n%s\n' "MD   $md_link" "LINK $file_link" "INFO $file_link_type"
     done
 done
-    
+
     ### If there's no command line argument given show scan summary and interactive menu.
     if [[ -z $2 ]]; then
         printf '%s\n\n%s\n' \
@@ -429,13 +431,16 @@ done
     if [[ $relink_command == c ]] || [[ $relink_command == cleanup ]]; then
         
         declare -a media_files_to_delete
-        
         for media_file in "${media_files_list[@]}"; do
             if [[ ! "${absolute_links_list[*]}" =~ "$media_file" ]] \
               && [[ ! "${relative_links_list[*]}" =~ "$note_root_dir$media_file" ]]; then
                 media_files_to_delete+=( $media_file )
             fi 
         done
+        
+        ### Stop the script if there's nothing to cleanup.
+        [[ ! ${#media_files_to_delete[@]} == 0 ]] \
+          && printf '\n%s\n\n' 'No unused files found in "media" directory.' && exit
         
         ### Confirm
         if [[ ! $3 == f ]] && [[ ! $3 == force ]]; then
@@ -450,7 +455,7 @@ done
     
         if [[ $delete_confirmed == y ]]; then
             for file_to_delete in ${media_files_to_delete[@]}; do 
-                rm -f $file_to_delete && n_deleted=$(($n_deleted+1))
+                rm -f "$file_to_delete" && n_deleted=$(($n_deleted+1))
             done
             printf '\n%s\n\n' "$n_deleted files deleted."
             [[ ${#media_files_to_delete[@]} != $n_deleted ]] \
