@@ -1,18 +1,15 @@
-readme
-======
-
 # Bash-note
-
-Bash-note will run only on GNU/Linux.
-
-Before running the script you should open it and check config section for set options. The most important is `note_root_dir` which is the directory where you store markdown notes.  
-This directory can be a symlink, anything inside it however should be real files or hardlinks.
 
 Bash-note is as set of small scripts called modules.
 
 There are two types of modules:  
 1) Modules ran by running bash-note with specific argument;  
 2) Modules ran by file system watcher for specific file types.
+
+Bash-note will run only on GNU/Linux.
+
+Before running the script you should open it and check config section for set options. The most important is `note_root_dir` which is the directory where you store markdown notes.  
+This directory can be a symlink, anything inside it however should be real files or hardlinks.
 
 You can see all Bash-note command line arguments by running `bash-note -h`.
 
