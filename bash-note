@@ -11,7 +11,7 @@
 # ANY DAMAGE DONE TO YOUR FILES IS ALL YOUR FAULT
 
 if [[ $1 = -h ]] || [[ $1 = --help ]]; then echo \
-"Bash-note, version 0.3.0
+"Bash-note, version 0.2.3
 
 Bash-note is as set of small scripts called modules which are supposed to help you 
 and your note application or markdown editor managing plain text markdown syntax notes.
