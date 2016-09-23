@@ -1,7 +1,7 @@
 Bash-note changelog
 =========
 
-### 0.2.3  
+### 23.08.2016 
 - New option to scan all files before starting file system watcher;  
 - New option for bash-note to generate absolute or relative links while processing notes;  
 - Added entry type for Fast notes merger and Clipnote - bookmark with web page title handling;  
@@ -10,7 +10,7 @@ Bash-note changelog
 - Fixed some broken things in Relink module;  
 - Other minor enhancements.
 
-### 0.2.0  
+### 01.08.2016 
 - Added Relink module that can convert links and cleanup media dirctory of unused files;  
 - Fast note merger module now process images put to inbox directory and has a sefety check for file extensions;  
 - There's an option for auto-rotation of such images based on EXIF orientation to correctly display them in QOwnNotes and other apps that don't use EXIF orientation themselve;  
@@ -18,5 +18,5 @@ Bash-note changelog
 - Fixed bugs when there is "media" in note root path;  
 - Other minor enhancements.
 
-### 0.1.1  
+### 16.07.2016 
 Initial release. 
