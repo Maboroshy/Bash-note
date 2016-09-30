@@ -6,12 +6,12 @@
 # | |_/ / (_| \__ \ | | |____| | | | (_) | | ' __/
 # \____/ \__,_|___/_| |_|    |_| |_|\___/ \__\___|
 #                                    by Maboroshy
-#
+# 
 # THIS SCRIPT COMES WITHOUT ANY WARRANTY
 # ANY DAMAGE DONE TO YOUR FILES IS ALL YOUR FAULT
 
 if [[ $1 = -h ]] || [[ $1 = --help ]]; then echo \
-"Bash-note, version 0.2.3
+"Bash-note, rev. 30.09.2016
 
 Bash-note is as set of small scripts called modules which are supposed to help you 
 and your note application or markdown editor managing plain text markdown syntax notes.
@@ -170,17 +170,39 @@ IFS=$'\n'
 ### There's a count mode that won't show notifications but count them to show a single one with numbers only.
 
 notify () {
-    if [[ $notifications_duration != 0 ]] && [[ $notifications_count_mode != 1 ]]; then
+    if [[ $notifications_duration != 0 ]]; then
         [[ $1 = done ]] && notify-send -i "$icon_success" -t $notifications_duration "$2" "$3"
         [[ $1 = fast ]] && notify-send -i "$icon_success" -t $(($notifications_duration/2)) "$2" "$3"
         [[ $1 = fail ]] && notify-send -i "$icon_warning" -t $notifications_duration "$2" "$3"
-    
-    elif [[ $notifications_duration != 0 ]] && [[ $notifications_count_mode = 1 ]]; then
-        [[ $1 = done ]] && (($n_done_notifications+1))
-        [[ $1 = fast ]] && (($n_done_notifications+1))
-        [[ $1 = fail ]] && (($n_fail_notifications+1))
     fi
 } 
+
+### Add to inbox file: add_to_inbox ENTRY SORTING_MODE INBOX_FILE
+### Adds text/variable content to a inbox file using set order
+add_to_inbox () {
+    if [ $2 = newer_first ]; then
+        inbox_content="$(printf '%s\n\n' "$1" "$(cat "$3")")"
+        printf '%s\n' "$inbox_content" > "$3"
+    else printf '\n\n%s' "$1" >> "$3"
+    fi
+}
+
+### Check if TEXT is link and convert it to markdown: check_for_link TEXT
+check_for_link () {
+    if [[ $1 = http://* ]] || [[ $1 = https://* ]]; then
+        link="$(printf '%s\n' "$1" | head -n1)"
+        title="$(wget -qO- "$link" | grep -iPo '(?<=<title>)(.*)(?=</title>)')"
+        
+        [[ -n $title ]] && output="[$title]($link)" || output="<$link>"
+        
+    else output="$1"
+    fi
+    
+    printf '%s\n' "$output"
+}
+
+### Decode URL like %D0%AF stuff to normal.
+urldecode () { : "${*//+/ }"; echo -e "${_//%/\\x}"; }
 
 ##===============================##
 ## Safety checks and preparation ##
@@ -326,11 +348,8 @@ if [[ $1 = -c ]]; then
     IFS=$'\n'
     
     ### Get inline images links, even when their markdown code contains new lines.
- #    for img_link in $(printf '%s\n' "$clipnote_md" | sed -n "/^\!\[/,/)/p" \
- #     | grep -o 'http.*//[^ )]\+'); do
-
-        for img_link in $(printf '%s\n' "$clipnote_md" | tr '\n' ' ' \
-          | grep -o -e '!\[[^[]*] *([^)]*)' | grep -o -e 'http[^ )]\+'); do
+    for img_link in $(printf '%s\n' "$clipnote_md" | tr '\n' ' ' \
+      | grep -o -e '!\[[^]]*] *([^)]*)' | grep -o -e 'http[^ )]\+'); do
  
         ### Download that images to media directory. 
         ### Adds some unique digits to file names to work around possible duplicates.
@@ -346,14 +365,7 @@ if [[ $1 = -c ]]; then
     
     ### If it has a http link as the first line then it's a bookmark. 
     ### Get the web page title and format it all as entry. If there's no link make a simple text entry.
-    if [[ $clipnote_md = http://* ]] || [[ $fast_note_text = https://* ]]; then
-        bookmark_link="$(printf '%s\n' "$clipnote_md" | head -n1)"
-        bookmark_title="$(wget -qO- "$bookmark_link" | grep -iPo '(?<=<title>)(.*)(?=</title>)')"
-        [[ -n $bookmark_title ]] && entry=$(printf '%s\n' "[$bookmark_title]($bookmark_link)") \
-          || entry=$(printf '%s\n' "<$bookmark_link>")
-    else 
-        entry=$(printf '%s\n' "$clipnote_md")
-    fi
+    entry="$(check_for_link "$clipnote_md")"
     
     ### Get the current date and time for a header. Add source link to header if url is available.
     if [[ $clipnote_insert_date = 1 ]]; then
@@ -365,11 +377,8 @@ if [[ $1 = -c ]]; then
         fi
     fi
     
-    ### Add entry to the beginning or to the end of inbox note depending on chosen method.
-    temp_file="$RANDOM"
-    [ $clipnote_sorting_mode = newer_first ] && printf '%s\n\n' "$entry" \
-        | cat - "$clipnote_inbox_file_name" > "$temp_file" && mv "$temp_file" "$clipnote_inbox_file_name"
-    [ $clipnote_sorting_mode = older_first ] && printf '%s\n\n' "$entry" >> "$clipnote_inbox_file_name"
+    ### Write entry to inbox note file with function.
+    add_to_inbox "$entry" "$clipnote_sorting_mode" "$clipnote_inbox_file_name"
     
     ### Show notification. There is a function for that.
     notify fast "Selection saved to inbox note."
@@ -415,7 +424,7 @@ for note_file in ${note_files_list[@]}; do
     
     ### Get any markdown link code. Truncating enables multi-line link code but doubles run time.
     for md_link in $(cat "$note_file" | tr '\n' ' ' \
-      | grep -o -e '!\[[^[]*] *([^)]*)' -e '\[[^]]*] *([^)]*)' -e '\[[^]]*]: *<[^>]*>' -e '\[[^]]*]: *[^ ]* '); do
+      | grep -o -e '!\[[^]]*] *([^)]*)' -e '\[[^]]*] *([^)]*)' -e '\[[^]]*]: *<[^>]*>' -e '\[[^]]*]: *[^ ]* '); do
         
         ### Set link unique ID and put it to markdown links list 
         link_id=$((link_id+1))
@@ -434,7 +443,7 @@ for note_file in ${note_files_list[@]}; do
             file_link="$(printf '%s\n' "$md_link" | sed -n 's|\[.*] *(\(.*\))|\1|p')"
         fi
         
-        ### 1. If the starts with "!' clear "!" and mark as image link.
+        ### 1. If the link starts with "!' clear "!" and mark as image link.
         [[ $file_link = "!"* ]] && \
           file_link="${file_link#\!}" && file_link_type+='Inline image, '
         
@@ -462,10 +471,10 @@ for note_file in ${note_files_list[@]}; do
         [[ $file_link = note* ]] \
           && note_links_list["$link_id:$note_file"]="$file_link" && file_link_type+='Note link, '
         
-        if [[ -f $file_link ]]; then 
+        if [[ -f $(urldecode $file_link) ]]; then 
             absolute_links_list["$link_id:$note_file"]="$file_link"
             file_link_type+='Absolute.'
-        elif [[ -f $note_root_dir$file_link ]]; then 
+        elif [[ -f $note_root_dir$(urldecode $file_link) ]]; then 
             relative_links_list["$link_id:$note_file"]="$file_link" 
             file_link_type+='Relative.'
         else
@@ -682,16 +691,10 @@ if [[ $1 = -w ]] && [[ -n "$2" ]]; then note_root_dir="$2"; fi
 ### that could have changed before previous bash-note run. After that get all the file system events.
 ( 
     if [[ $scan_previous_changes_enabled = 1 ]]; then 
-        notifications_count_mode=1
-        find "$note_root_dir" ! -path '*/.*' ! -path "$note_root_dir/$media/*" -type f
-        notifications_count_mode=0
-        
-        # TODO
-#         (( $n_done_notifications > 0 )) && summary+="$n_done_notifications events processed."
-#         (( $n_fail_notifications > 0 )) && summary+="Failed to process $n_fail_notifications events."
-#         [[ -n $summary ]] && notify-send -t $notifications_duration "Bash-note" "$summary"
+        find "$note_root_dir" ! -path '*/.*' ! -path "$note_root_dir/$media/*" -type f     
+        sleep 1
     fi
-    sleep 1
+    
     inotifywait -mrq -e modify -e move --format '%w%f' \
     --exclude "(.*/\..|$note_root_dir/$media/)" "$note_root_dir"
 
@@ -720,21 +723,22 @@ file_mime="$(file -ib "$file")"
 if [[ $web2note_enabled = 1 ]] && [[ ! $file_path =~ "$web_page_files_dir_app" ]] \
   && [[ $file_ext != "$main_note_extension" ]] && [[ $file_mime =~ text/html ]] ; then
     
-    ### Wait for browser to check that file is downloaded.
+    ### Delay for browser to check that file is downloaded.
     sleep 1
     
-    ### Convert web page to html-less markdown with main note extension.
-    iconv -sc -t utf-8 "$file" \
+    ### Delete Firefox reader mode toolbar html code from the web page to be converted. 
+    ### Then convert web page to html-less markdown with main note extension.
+    sed '/<ul id="reader-toolbar" class="toolbar">/,/<\/li><\/ul><\/ul>/d' "$file" | iconv -sc -t utf-8 \
       | pandoc -f html -t markdown_strict+pipe_tables-raw_html -o "${file%.*}"."$main_note_extension"
     
     ### Put "file://media/" before every image link, even if image tag is multi-line. 
     ### Images will be put to media directory in the next loop.
     img_link=$(cat "${file%.*}"."$main_note_extension" | tr '\n' ' ' \
-      | grep -o -e '!\[[^[]*] *([^)]*)' | grep -m 1 "$web_page_files_dir_app")
+      | grep -o -e '!\[[^]]*] *([^)]*)' | grep -m 1 "$web_page_files_dir_app")
     img_link_path=${img_link#*(}
     img_link_path=${img_link_path%%$web_page_files_dir_app*}
-            
-    sed -i "s|($img_link_path|(file://$media_path/$img_link_path|g" "${file%.*}"."$main_note_extension"
+    
+    sed -i "s|($img_link_path|(file://$media_path/$(urldecode $img_link_path)|g" "${file%.*}"."$main_note_extension"
      
     ### Check if new note file is there. Show notification and remove converted web page.
     if [[ -f "${file%.*}"."$main_note_extension" ]]; then 
@@ -752,7 +756,7 @@ if [[ $web2note_enabled = 1 ]] && [[ $file_path =~ "$web_page_files_dir_app" ]] 
     web_page_files_subdir="${file_path##*$web_page_files_dir_app}"
     web_page_files_relative_path="$web_page_files_dir_name$web_page_files_dir_app$web_page_files_subdir"
     
-    ### Wait for browser to check that file is downloaded.
+    ### Delay for browser to check that file is downloaded.
     sleep 1
     
     ### Move image files to the same directory in media.
@@ -768,7 +772,7 @@ if [[ $web2note_enabled = 1 ]] && [[ $file_path =~ "$web_page_files_dir_app" ]] 
     rm -d "$file_path"
 fi &
     
-## Fast notes merger: adds fast notes and images to a single main note ## TODO Make write buffer
+## Fast notes merger: adds fast notes and images to a single main note ##
 ##---------------------------------------------------------------------##
 
 if [[ $fast_notes_merger_enabled = 1 ]] && [[ $file_path = "$fast_notes_merger_inbox_dir" ]] \
@@ -776,13 +780,14 @@ if [[ $fast_notes_merger_enabled = 1 ]] && [[ $file_path = "$fast_notes_merger_i
     
     cd "$fast_notes_merger_inbox_dir"
     
-    ### Get the file modification date and time for a header.
-    mod_time=$(date '+%R %a %x' -r "$file")
+    ### Get the file modification date and time for a header and another one for note sorting.
+    mod_time_header=$(date '+%R %a %x' -r "$file")
+    mod_time_compare=$(date '+%s' -r "$file")
  
-    ### If it's and image then format it as entry and move it to media directory. 
+    ### If it's an image then format it as entry and move it to media directory. 
     ### If it's not then get the content and delete it.
     if [[ $file_mime =~ image ]]; then 
-        entry=$(printf '%s\n%s\n' "### $mod_time  " "![](file://$media_path/ImageNotes/$file_name)")
+        entry=$(printf '%s\n%s\n' "### $mod_time_header  " "![](file://$media_path/ImageNotes/$file_name)")
         [[ $fast_notes_auto_rotate_images_enabled = 1 ]] && jhead -se -exonly -autorot "$file"
         mv -f "$file" "$note_root_dir/$media/ImageNotes"
     else 
@@ -790,24 +795,31 @@ if [[ $fast_notes_merger_enabled = 1 ]] && [[ $file_path = "$fast_notes_merger_i
         rm -f "$file"
     fi
     
-    ### If it has a http link as the first line then it's a bookmark. 
-    ### Get the web page title and format it all as entry. If there's no link make a simple text entry.
-    if [[ $fast_note_text = http://* ]] || [[ $fast_note_text = https://* ]]; then
-        bookmark_link="$(printf '%s\n' "$fast_note_text" | head -n1)"
-        bookmark_title="$(wget -qO- "$bookmark_link" | grep -iPo '(?<=<title>)(.*)(?=</title>)')"
-        [[ -n $bookmark_title ]] && entry=$(printf '%s\n%s\n' "### $mod_time  " "[$bookmark_title]($bookmark_link)") \
-          || entry=$(printf '%s\n%s\n' "### $mod_time  " "<$bookmark_link>")
+    ### If it has a http link as the first line then format it as bookmark. 
+    entry="$(printf '%s\n%s\n' "### $mod_time_header  " "$(check_for_link "$fast_note_text")")"
+    
+    ### Add fast note to buffer array.
+    fast_notes_buffer[$mod_time_compare]="$entry"
+    
+    ### Delay for all fast notes files to be synced to disk.
+    sleep 2
+    
+    ### After the processing the last fast note in inbox directory sort the buffer and prepare single entry.
+    if [[ -z $(find $fast_notes_merger_inbox_dir -maxdepth 1 -name "*.$fast_notes_extension") ]]; then
+                
+        for buffered_entry in $(printf '%s\n' "${!fast_notes_buffer[@]}" | sort); do
+            [ $fast_notes_sorting_mode = newer_first ] \
+                && merged_entry="$(printf '%s\n\n' "${fast_notes_buffer[$buffered_entry]}" "$merged_entry")"
+            [ $fast_notes_sorting_mode = older_first ] \
+                && merged_entry+="$(printf '\n\n%s' "${fast_notes_buffer[$buffered_entry]}")"
+        done
         
-    else 
-        entry=$(printf '%s\n%s\n' "### $mod_time  " "$fast_note_text")
-    fi
+        ### Write entry to inbox note file with function.
+        add_to_inbox "$merged_entry" "$fast_notes_sorting_mode" "$fast_notes_inbox_file_name"
 
-    ### Add entry to the beginning or to the end of inbox note depending on chosen method.
-    temp_file="$RANDOM"
-    [ $fast_notes_sorting_mode = newer_first ] && printf '%s\n\n' "$entry" \
-        | cat - "$fast_notes_inbox_file_name" > "$temp_file" && mv "$temp_file" "$fast_notes_inbox_file_name"
-    [ $fast_notes_sorting_mode = older_first ] && printf '%s\n\n' "$entry" >> "$fast_notes_inbox_file_name"
-    notify fast "Bash-note: Fast note added" "$file_name added to inbox note"
-fi &
+        notify fast "Bash-note" "Fast notes added"
+        unset -v fast_notes_buffer merged_entry
+    fi
+fi
 
 done ### It's the final "done" of file watcher loop.
