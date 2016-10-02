@@ -1,6 +1,10 @@
 Bash-note changelog
 =========
 
+### 30.09.2016
+- Non-ascill URL adress are now decoded to a proper unicode instead of `%D0%AF`-like.
+- Web2note module now doesn't include Firefox reader toolbar html code to note.
+
 ### 23.08.2016 
 - New option to scan all files before starting file system watcher;  
 - New option for bash-note to generate absolute or relative links while processing notes;  
