@@ -2,7 +2,7 @@ Bash-note changelog
 =========
 
 ### 30.09.2016
-- Non-ascill URL adress are now decoded to a proper unicode instead of `%D0%AF`-like.
+- Non-ascill URLs are now decoded to a proper unicode instead of `%D0%AF`-like;
 - Web2note module now doesn't include Firefox reader toolbar html code to note.
 
 ### 23.08.2016 
