@@ -211,7 +211,7 @@ urldecode () { : "${*//+/ }"; echo -e "${_//%/\\x}"; }
 ### Get the real path of directories and files if they are symlinks. 
 ### Also cuts "/" in the end of paths so user can't really make a mistake by putting or not putting "/".
 note_root_dir=$(realpath -q "$note_root_dir")
-fast_notes_merger_inbox_dir=$(realpath -q "$note_root_dir")
+fast_notes_merger_inbox_dir=$(realpath -q "$fast_notes_merger_inbox_dir")
 
 ### Set the "media" directory name and path according to link type and the name. With symlink fix.
 media="media"
