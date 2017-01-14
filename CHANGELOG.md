@@ -1,6 +1,14 @@
 Bash-note changelog
 =========
 
+### 15.01.2017
+- Moved many settings out of the script file to call them with command line arguments (compabilty with old versions broken);
+- Made an overhaul of command line arguments (compabilty with old versions broken);
+- Implemented fast notes tagging;
+- Favcions download for "bookmark" notes;
+- Dependency check info moved to general "help" information;
+- Fixed many bugs.
+
 ### 30.09.2016
 - Non-ascill URLs are now decoded to a proper unicode instead of `%D0%AF`-like;
 - Web2note module now doesn't include Firefox reader toolbar html code to note.
