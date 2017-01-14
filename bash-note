@@ -10,60 +10,6 @@
 # THIS SCRIPT COMES WITHOUT ANY WARRANTY
 # ANY DAMAGE DONE TO YOUR FILES IS ALL YOUR FAULT
 
-if [[ $1 = -h ]] || [[ $1 = --help ]]; then echo \
-"Bash-note, rev. 30.09.2016
-
-Bash-note is as set of small scripts called modules which are supposed to help you 
-and your note application or markdown editor managing plain text markdown syntax notes.
-
-Bash-note stores its settings inside the script file in config section.
-
-There are two types of modules: 
-1) Modules evoked by file system watcher on specific file types.
-Set the settings for them in config section and run bash-note as a file system watcher.
-
-2) modules evoked by running bash-note with specific argument.
-Run them with one of the command line arguments below.
-Using more than one the arguments is not supported.
-
-Usage:
-bash-note                       Run file system watcher for directory set in config section
-bash-note -w DIRECTORY          Run file system watcher for DIRECTORY
-
-bash-note -d                    List and check module dependencies (binaries used in module)
-
-bash-note -i FILE               Import bash-note settings from FILE
-
-bash-note -c                    Add selected text or part of web page to a file set in config section
-bash-note -c FILE               Add selected text or part of web page to FILE
-
-bash-note -l                    Handle links in your notes with interactive menu
-bash-note -l test               Run verbose test of link parser
-bash-note -l t                  Same as above
-
-bash-note -l list               Show list of all links by categories
-bash-note -l l                  Same as above
-
-bash-note -l cleanup            Clean media directory from files that are not linked to in notes
-bash-note -l c                  Same as above
-bash-note -l cleanup force      Clean media directory without confirmation
-bash-note -l c f                Same as above
-
-bash-note -l absolute           Convert all relative links to absolute
-bash-note -l a                  Same as above
-bash-note -l absolute force     Convert all relative links to absolute without confirmation
-bash-note -l a f                Same as above
-bash-note -l absolute test      Run verbose test of conversion. No notes will be modified.
-bash-note -l a t                Same as above
-
-bash-note -l relative           Convert all absolute links to relative
-bash-note -l r                  Same as above
-bash-note -l relative force     Convert all absolute links to relative without confirmation
-bash-note -l r f                Same as above
-bash-note -l relative test      Run verbose test of conversion. No notes will be modified.
-bash-note -l r f                Same as above
-"; exit; fi
-
 # Don't change section markers with CAPS below or importing settings won't work.
 
 #####################################################
@@ -75,7 +21,7 @@ bash-note -l r f                Same as above
 
 # Directory that stores notes or stores sub-directories with notes. 
 # For QOwnNotes it is the one set in options and having "media" sub-directory for storing inline images.
-note_root_dir="/storage/emulated/0/Android/data/com.ryeeeeee.markdownx/files/notes/Test"
+note_root_dir='/storage/emulated/0/notes'
 
 # File extension which is considered as main note extension. Can be "md", "txt" or whatever. 
 # Anyway script considers that there is markdown syntax inside it.
@@ -83,17 +29,8 @@ main_note_extension="md"
 
 # Type of links Bash-note modules will generate while processing notes: "absolute" or "relative".
 # QOwnNotes generates relative links but also handles absolute without issues.
-# Most markdown editors won't work with relative links so use "absolute" or "nofile" if you need portability.
-preferred_link_type="absolute"
-
-# Put 1 to enable scanning all files before starting file system watcher. 
-# That will process new files and changes that could have been made after previous Bash-note run.
-scan_previous_changes_enabled=1
-
-# Any CLI command bash-note should run before starting file system watcher. Leave empty for nothing.
-# Can have absolute path otherwise will use bash-note file path. For example you can put 
-# "bash-note -l cleanup force" to clean "media" directory at the start or a command to make a backup.
-command_to_run_at_start=
+# Most markdown editors won't work with relative links so use "absolute" if you need portability.
+preferred_link_type="relative"
 
 
 ## Notifications ##
@@ -112,13 +49,7 @@ icon_warning="emblem-warning.svg"
 ##----------------------------------------##
 
 # Put inbox note file name here. Can have absolute path, otherwise file will be stored in note root directory.
-clipnote_inbox_file_name="!Inbox.$main_note_extension"
-
-# Entry sorting mode: newer_first or older_first
-clipnote_sorting_mode=newer_first
-
-# Put 1 to insert date and time before each entry 
-clipnote_insert_date=1
+clipnote_inbox_file_name='/storage/emulated/0/notes/Компьютер/Coding/Подводные камни Bash.md'
 
 
 ## Web2note: converts web pages to markdown notes ##
@@ -141,19 +72,20 @@ fast_notes_merger_enabled=1
 # Extension of files which are considered as "fast notes" and should be merged.
 fast_notes_extension=txt
 
-# Inbox directory. All "fast notes" and images put there will be added to inbox note.
-fast_notes_merger_inbox_dir="$note_root_dir"
+# Inbox directory. All "fast notes" and images put there will be added to inbox note. Absolute path.
+fast_notes_merger_inbox_dir="$note_root_dir/Входящие"
 
 # Put inbox note file name here. Can have absolute path, otherwise will be stored in inbox directory. 
 # Can be the same as for Clipnote module.
-fast_notes_inbox_file_name="!Inbox.$main_note_extension"
+fast_notes_inbox_file_name='/storage/emulated/0/notes/Входящие/!Inbox.md'
 
 # Entry sorting mode: newer_first or older_first
 fast_notes_sorting_mode=newer_first
 
-# Auto-rotate images to correctly display them if markdown editor doesn't support exif orientation.
-# QOwnNotes is such markdown editor too. Requires jhead as a dependency.
-fast_notes_auto_rotate_images_enabled=1
+# If a word in a fast note begins with a set characters this word is considered as a tag. Tags can't have spaces.
+# Fast note with a tag will be added to a note in inbox directory named like the tag. 
+# Fast notes can have multiple tags. Leave empty to disable tagging.
+fast_notes_tag_marker=',,'
 
 
 ##########################################################################
@@ -162,51 +94,8 @@ fast_notes_auto_rotate_images_enabled=1
 
 IFS=$'\n'
 
-##==================##
-## Shared Functions ##
-##==================##
-
-### Show notification: notify done|fail SUMMARY BODY
-### There's a count mode that won't show notifications but count them to show a single one with numbers only.
-
-notify () {
-    if [[ $notifications_duration != 0 ]]; then
-        [[ $1 = done ]] && notify-send -i "$icon_success" -t $notifications_duration "$2" "$3"
-        [[ $1 = fast ]] && notify-send -i "$icon_success" -t $(($notifications_duration/2)) "$2" "$3"
-        [[ $1 = fail ]] && notify-send -i "$icon_warning" -t $notifications_duration "$2" "$3"
-    fi
-} 
-
-### Add to inbox file: add_to_inbox ENTRY SORTING_MODE INBOX_FILE
-### Adds text/variable content to a inbox file using set order
-add_to_inbox () {
-    if [ $2 = newer_first ]; then
-        inbox_content="$(printf '%s\n\n' "$1" "$(cat "$3")")"
-        printf '%s\n' "$inbox_content" > "$3"
-    else printf '\n\n%s' "$1" >> "$3"
-    fi
-}
-
-### Check if TEXT is link and convert it to markdown: check_for_link TEXT
-check_for_link () {
-    if [[ $1 = http://* ]] || [[ $1 = https://* ]]; then
-        link="$(printf '%s\n' "$1" | head -n1)"
-        title="$(wget -qO- "$link" | grep -iPo '(?<=<title>)(.*)(?=</title>)')"
-        
-        [[ -n $title ]] && output="[$title]($link)" || output="<$link>"
-        
-    else output="$1"
-    fi
-    
-    printf '%s\n' "$output"
-}
-
-### Decode URL like %D0%AF stuff to normal.
-urldecode () { : "${*//+/ }"; echo -e "${_//%/\\x}"; }
-
-##===============================##
-## Safety checks and preparation ##
-##===============================##
+### Set argument as note root path for file scanner mode.
+[[ $1 = -s ]] || [[ $1 = -w ]] && [[ -n "$2" ]] && note_root_dir="$2"
 
 ### Get the real path of directories and files if they are symlinks. 
 ### Also cuts "/" in the end of paths so user can't really make a mistake by putting or not putting "/".
@@ -221,13 +110,73 @@ if [[ $preferred_link_type = "absolute" ]]; then
 else media_path="$media"
 fi
 
-### Run command set in config.
-if [[ -n $command_to_run_at_start ]]; then
-    bash_note_file="$(realpath -s $0)"
-    bash_note_path="${bash_note_file%/*}"
-    cd "$bash_note_path"
-    $command_to_run_at_start
-fi
+mkdir -p "$note_root_dir/$media/Favicons"
+
+##==================##
+## Shared Functions ##
+##==================##
+
+### Show notification: notify done|fast|fail SUMMARY BODY
+### Fast is half duration.
+
+notify () {
+    if [[ $notifications_duration != 0 ]]; then
+        [[ $1 = done ]] && notify-send -i "$icon_success" -t $notifications_duration "$2" "$3"
+        [[ $1 = fast ]] && notify-send -i "$icon_success" -t $(($notifications_duration/2)) "$2" "$3"
+        [[ $1 = fail ]] && notify-send -i "$icon_warning" -t $notifications_duration "$2" "$3"
+    fi
+} 
+
+### Add to inbox file: add_to_inbox ENTRY SORTING_MODE INBOX_FILE
+### Adds text/variable content to a inbox file using set order
+add_to_inbox () {
+    if [[ $2 = newer_first ]]; then
+        inbox_content="$(printf '%s\n\n' "$1" "$(cat "$3")")"
+        printf '%s\n' "$inbox_content" > "$3"
+    else printf '\n\n%s' "$1" >> "$3"
+    fi
+}
+
+### Check if TEXT is a link and convert it to markdown: check_for_link TEXT
+check_for_link () {
+    if [[ $1 = http://* ]] || [[ $1 = https://* ]]; then
+        link="$(printf '%s\n' "$1" | head -n1)"
+        link_html="$(wget -qO- "$link")"
+        
+        ### Get web page title
+        title="$(printf '%s' "$link_html" | grep -iPo '(?<=<title>)(.*)(?=</title>)' | tr '\n' ' ')"
+        
+        ### Download favicon using google service.
+        favicon_name="$RANDOM$RANDOM.png"
+        wget -q "https://www.google.com/s2/favicons?domain=$link" \
+          -O "$note_root_dir/$media/Favicons/$favicon_name"
+        
+        ### Don't use google's "no favicon" icon.
+        [[ $(md5sum "$note_root_dir/$media/Favicons/$favicon_name") = 3ca64f83fdcf25135d87e08af65e68c9* ]] &&
+          rm "$note_root_dir/$media/Favicons/$favicon_name"
+          
+        ### Prepare markdown link.
+        if  [[ -f "$note_root_dir/$media/Favicons/$favicon_name" ]] && [[ -n $title ]]; then
+            output="![](file://$media_path/Favicons/$favicon_name) [$title]($link)"
+        elif [[ -f "$note_root_dir/$media/Favicons/$favicon_name" ]] && [[ -z $title ]]; then
+            output="![](file://$media_path/Favicons/$favicon_name) <$link>"
+        elif [[ -n $title ]]; then 
+            output="[$title]($link)" 
+        else output="<$link>"
+        fi
+        
+    else output="$1"
+    fi
+    
+    printf '%s\n' "$output"
+}
+
+### Decode URL like %D0%AF to normal unicode.
+urldecode () { : "${*//+/ }"; echo -e "${_//%/\\x}"; }
+
+##===============================##
+## Safety checks and preparation ##
+##===============================##
 
 ### Check if main note directory path contains special characters. If it does - notify and stop the script.
 if [[ $note_root_dir = *[#\\\"]* ]] ; then 
@@ -243,12 +192,19 @@ if [[ $note_root_dir = */.* ]] ; then
     exit
 fi
 
-## Clipnote: pastes selected text to note ##
+## Clipnote: pastes selected text to note ## 
 ##----------------------------------------##
 
 if [[ $1 = -c ]]; then
+
+    ### Parse arguments
+    [[ $2 = b ]] && clipnote_sorting_mode=older_first && clipnote_insert_date=0
+    [[ $2 = t ]] && clipnote_sorting_mode=newer_first && clipnote_insert_date=0
+    [[ $2 = bd ]] && clipnote_sorting_mode=older_first && clipnote_insert_date=1
+    [[ $2 = td ]] && clipnote_sorting_mode=newer_first && clipnote_insert_date=1
+
     ### If there is a second command line argument, take it as inbox file name.
-    [[ -n "$2" ]] && clipnote_inbox_file_name="$2"
+    [[ -n $3 ]] && clipnote_inbox_file_name="$3"
     
     ### Check if inbox file and media directory for images exist, otherwise make them.
     cd "$note_root_dir"
@@ -256,10 +212,10 @@ if [[ $1 = -c ]]; then
     mkdir -p "$note_root_dir/$media/Clipnote"
 fi
 
-## File system changes watcher modules ##
-##-------------------------------------##
+## File scanner modules ##
+##----------------------##
 
-if [[ -z "$1" || $1 = "-w" ]]; then
+if [[ -z "$1" || $1 = "-s" ]]; then
 
     ## Fast notes merger: adds fast notes and images to a single main note ##
     ##---------------------------------------------------------------------##
@@ -280,37 +236,96 @@ if [[ -z "$1" || $1 = "-w" ]]; then
     fi
 fi
 
-##====================================================##
-## One-shot scripts called by commands line arguments ##
-##====================================================##
+##===========================================##
+## Scripts called by commands line arguments ##
+##===========================================##
 
-## Dependencies checker: checks for binaries used in modules ##
-##-----------------------------------------------------------##
+## Man page and dependency checker##
+##--------------------------------##
 
 ### Function to check if binary present: check_command BINARY
 check_command () { hash "$1" && echo "FOUND" || echo "NOT FOUND" ;}
 
-if [[ $1 = -d ]]; then echo \
-"Module dependencies:
+if [[ -z $1 ]] || [[ $1 = -h ]] || [[ $1 = --help ]]; then echo \
+"Bash-note, rev. 15.01.2017
+
+Bash-note is as set of small scripts called modules which are supposed to help you getting
+more out of plain text with markdown syntax than your text editor or note application can.
+
+Bash-note stores its settings inside the script file in config section.
+
+There are two types of modules: 
+1) Modules evoked on specific file types while scanning files.
+Set the settings for them in config section and run bash-note file scanner.
+
+2) Modules evoked by running bash-note with specific argument.
+Run them with one of the command line arguments below.
+Using more than one the arguments is not supported.
+
+Usage:
+
+bash-note                       Show this information
+
+bash-note -i FILE               Import bash-note settings from FILE which is bash-note script
+
+Process files with bash-note with modules enabled in config section
+
+bash-note -s                    Make a single scan of files in a directory set in config section
+bash-note -s DIRECTORY          Make a single scan of files in DIRECTORY
+
+bash-note -w                    Scan files in a directory set in config section then continue watching for changes
+bash-note -w DIRECTORY          Scan files in DIRECTORY then continue watching for changes
+
+Add clipboard content to a file as markdown syntax
+
+bash-note -c t                  Add selected text or part of web page to the top of a file set in config section
+bash-note -c b                  Add selected text or part of web page to the bottom of a file set in config section                
+bash-note -c td                 Add current date, time and selected text or part of web page
+                                    to the top of a file set in config section
+bash-note -c bd                 Add current date, time and selected text or part of web page
+                                    to the bottom of a file set in config section
+bash-note -c t FILE             Add selected text or part of web page to the top of a FILE, same for other -c commands
+
+Process links in markdown files
+
+bash-note -l                    Process links in markdown files with interactive menu
+bash-note -l t                  Run verbose test of link parser
+
+bash-note -l l                  Show list of all links by categories
+
+bash-note -l c                  Clean media directory from orphaned media
+bash-note -l c DIRECTORY        Clean media directory in DIRECTORY, notes will be scanned in DIRECTORY too
+
+bash-note -l a                  Convert all relative links to absolute
+bash-note -l a FILE             Convert all relative links in FILE to absolute
+bash-note -l a DIRECTORY        Convert all relative links in notes stored in DIRECTORY to absolute
+bash-note -l at                 Run verbose test of conversion. No notes will be modified.
+
+bash-note -l r                  Convert all absolute links to relative
+bash-note -l r FILE             Convert all relative links in FILE to relative
+bash-note -l r DIRECTORY        Convert all absolute links in notes stored in DIRECTORY to relative
+bash-note -l rt                 Run verbose test of conversion. No notes will be modified.
+
+Bash-note dependencies:
 
 DE notifications:
-        libnotify           $(check_command notify-send)
+        libnotify               $(check_command notify-send)
 
-File system watcher:
-        inotify-tools       $(check_command inotifywait)
+File scanner:
+        inotify-tools           $(check_command inotifywait)
     
-Clipnote:
-        xclip               $(check_command xclip)
-        gettext             $(check_command iconv)
-        pandoc              $(check_command pandoc)
-        wget                $(check_command wget)
+Add selected text or part of web page to a file (bash-note -c):
+        xclip                   $(check_command xclip)
+        gettext                 $(check_command iconv)
+        pandoc                  $(check_command pandoc)
+        wget                    $(check_command wget)
 
-Web2note:        
-        gettext             $(check_command iconv)
-        pandoc              $(check_command pandoc)
+Convert saved web page to markdown:        
+        gettext                 $(check_command iconv)
+        pandoc                  $(check_command pandoc)
 
-Fast notes merger:          
-        jhead               $(check_command jhead)
+Add all fast notes to a single file:          
+        jhead                   $(check_command jhead)
 "; exit; fi
 
 ## Settings importer: imports config from another bash-note file ##
@@ -343,7 +358,7 @@ if [[ $1 = -c ]]; then
     clipnote_html="$(xclip -clip clip -t text/html -o || xclip -clip clip -t UTF8_STRING -o)"
     clipnote_url="$(xclip -clip clip -t text/x-moz-url-priv -o)"
     clipnote_md="$(printf '%s\n' "$clipnote_html" | iconv -sc -t utf-8 \
-        | pandoc -f html -t markdown_strict+pipe_tables-raw_html)"
+        | pandoc -f html -t markdown_strict+pipe_tables-raw_html --wrap=none)"
 
     IFS=$'\n'
     
@@ -354,13 +369,11 @@ if [[ $1 = -c ]]; then
         ### Download that images to media directory. 
         ### Adds some unique digits to file names to work around possible duplicates.
         img_name="${img_link##*/}"
-        uniq=$RANDOM
-        uniq_img_name="$uniq-$img_name"
+        uniq_img_name="$RANDOM-$img_name"
         wget -q "$img_link" -O "$note_root_dir/$media/Clipnote/$uniq_img_name" &
         
         ### Replace links to online images with links to downloaded ones.
-        clipnote_md=$(printf '%s\n' "$clipnote_md" \
-            | sed "s|$img_link|file://$media_path/Clipnote/$uniq_img_name|g")
+        clipnote_md="${clipnote_md//"$img_link"/"file://$media_path/Clipnote/$uniq_img_name"}"
     done
     
     ### If it has a http link as the first line then it's a bookmark. 
@@ -381,7 +394,7 @@ if [[ $1 = -c ]]; then
     add_to_inbox "$entry" "$clipnote_sorting_mode" "$clipnote_inbox_file_name"
     
     ### Show notification. There is a function for that.
-    notify fast "Selection saved to inbox note."
+    notify fast "Selection saved to ${clipnote_inbox_file_name##*/}."
     exit
 fi
 
@@ -392,7 +405,13 @@ if [[ $1 = -l ]]; then
 
 ### Get the list of all note files
 declare -a note_files_list
-note_files_list=( $(find "$note_root_dir" -not -path '*/.*' -name "*.$main_note_extension" -type f) )
+
+if [[ -f $3 ]]; then
+    note_files_list="$3"
+else 
+    [[ -d $3 ]] && note_root_dir="$3"
+    note_files_list=( $(find "$note_root_dir" -not -path '*/.*' -name "*.$main_note_extension" -type f) )
+fi
 
 ### Get the list of all files in media directory
 declare -a media_files_list
@@ -503,10 +522,10 @@ done
           
         printf '\n\n%s\n' 'Bash-note commands to handle links:'
         printf ' %-15s %s\n' \
-          'l or list' 'to show list of all links with above categories' \
-          'c or cleanup' 'to clean media directory from files that are not linked to' \
-          'a or absolute' 'to convert all relative links to absolute with leading "file://"' \
-          'r or relative' 'to convert all absolute links to relative' \
+          'l' 'to show list of all links with above categories' \
+          'c' 'to clean media directory from files that are not linked to' \
+          'a' 'to convert all relative links to absolute' \
+          'r' 'to convert all absolute links to relative' \
           'any other' 'to stop this script'
         
         printf '\n%s' 'Type command and press Enter > '
@@ -516,7 +535,7 @@ done
     fi
     
     ### List command: show list of all links by categories
-    if [[ $relink_command = l ]] || [[ $relink_command = list ]] || [[ $2 = t ]] || [[ $2 = test ]]; then
+    if [[ $relink_command = l ]] || [[ $2 = t ]]; then
         printf '\033[1m%s\n\033[0m%s\n\n' \
         "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _" "" \
         "Inline images links: ${#inline_image_links_list[*]}" "${inline_image_links_list[*]}" \
@@ -527,11 +546,11 @@ done
         "Web resourses links: ${#web_links_list[*]}" "${web_links_list[*]}"
         
         ### Show scan time in test mode
-        [[ $2 = t ]] || [[ $2 = test ]] && printf '\n%s\n\n' "The scan took:" && times
+        [[ $2 = t ]] && printf '\n%s\n\n' "The scan took:" && times
     fi
     
     ### Cleanup command: clean media directory from files that are not linked to.
-    if [[ $relink_command = c ]] || [[ $relink_command = cleanup ]]; then
+    if [[ $relink_command = c ]]; then
         
         declare -a media_files_to_delete
         for media_file in "${media_files_list[@]}"; do
@@ -547,7 +566,7 @@ done
           && printf '\n%s\n\n' 'No unused files found in "media" directory.' && exit
         
         ### Confirm
-        if [[ ! $3 = f ]] && [[ ! $3 = force ]]; then
+        if [[ ! $2 = c ]]; then
             printf '%s\n' '' "Files not linked to in any of your notes: ${#media_files_to_delete[@]}" \
               "${media_files_to_delete[@]}"
             printf '\n%s' 'Do you want to delete this files?' \
@@ -561,7 +580,7 @@ done
         if [[ $delete_confirmed = y ]]; then
             for file_to_delete in ${media_files_to_delete[@]}; do 
                 rm -f "$file_to_delete" && n_deleted=$(($n_deleted+1))
-                rm -d "${file_to_delete%/*}"
+                rm -d "${file_to_delete%/*}" | true
             done
             printf '\n%s\n\n' "$n_deleted files deleted."
             [[ ${#media_files_to_delete[@]} != $n_deleted ]] \
@@ -570,16 +589,16 @@ done
     fi
 
     ### Relative command: convert all absolute links to relative.
-    if [[ $relink_command = r ]] || [[ $relink_command = relative ]]; then
+    if [[ $relink_command = r ]] || [[ $relink_command = rt ]]; then
         
         ### Confirm
-        if [[ ! $3 = f ]] && [[ ! $3 = force ]] && [[ ! $3 = t ]] && [[ ! $3 = test ]] ; then
+        if [[ ! $2 = r ]] && [[ ! $2 = rt ]]; then
             printf '\n%s' "Do you want to convert ${#absolute_links_list[@]} links to relative?" \
               'Type "y" to convert, "t" for dry-run test or anything else to abort > '
             read convert_confirmed
         else
-            [[ $3 = f ]] || [[ $3 = force ]] && convert_confirmed=y
-            [[ $3 = t ]] || [[ $3 = test ]] && convert_confirmed=t
+            [[ $2 = r ]] && convert_confirmed=y
+            [[ $2 = rt ]] && convert_confirmed=t
         fi
         
         ### Convert links and replace them in note files.
@@ -623,16 +642,16 @@ done
     fi
     
     ### Absolute command: convert all relative links to absolute.
-    if [[ $relink_command = a ]] || [[ $relink_command = absolute ]]; then
+    if [[ $relink_command = a ]] || [[ $relink_command = at ]]; then
         
         ### Confirm
-        if [[ ! $3 = f ]] && [[ ! $3 = force ]] && [[ ! $3 = t ]] && [[ ! $3 = test ]] ; then
+        if [[ ! $2 = a ]] && [[ ! $2 = at ]]; then
             printf '\n%s' "Do you want to convert ${#relative_links_list[@]} links to absolute?" \
               'Type "y" to convert, "t" for dry-run test or anything else to abort > '
             read convert_confirmed
         else
-            [[ $3 = f ]] || [[ $3 = force ]] && convert_confirmed=y
-            [[ $3 = t ]] || [[ $3 = test ]] && convert_confirmed=t
+            [[ $2 = a ]] && convert_confirmed=y
+            [[ $2 = at ]] && convert_confirmed=t
         fi
         
         ### Convert links and replace them in note files.
@@ -678,34 +697,29 @@ done
     exit
 fi
         
-##==========================================================================##
-## File watcher loop: gets changed files and pulls them through all modules ##
-##==========================================================================##
+##==================================================================##
+## File scanner loop: scan files and pulls them through all modules ##
+##==================================================================##
         
-## File system changes watcher ##
-##-----------------------------##
+## File scanner ##
+##--------------##
 
-if [[ $1 = -w ]] && [[ -n "$2" ]]; then note_root_dir="$2"; fi
+if [[ $1 = -s ]] || [[ $1 = -w ]]; then
 
+(
 ### Scan all files excluding hidden directories/files and "media" directories to process everything 
-### that could have changed before previous bash-note run. After that get all the file system events.
-( 
-    if [[ $scan_previous_changes_enabled = 1 ]]; then 
-        find "$note_root_dir" ! -path '*/.*' ! -path "$note_root_dir/$media/*" -type f     
+### that could have changed before previous bash-note run. 
+    find "$note_root_dir" ! -path '*/.*' ! -path "$note_root_dir/$media/*" -type f     
+
+### Watch all files excluding hidden directories/files and "media" directories to process any file 
+### changed while bash-note is running.
+    if [[ $1 = -w ]]; then
         sleep 1
+        inotifywait -mrq -e modify -e move --format '%w%f' \
+          --exclude "(.*/\..|$note_root_dir/$media/)" "$note_root_dir"
     fi
-    
-    inotifywait -mrq -e modify -e move --format '%w%f' \
-    --exclude "(.*/\..|$note_root_dir/$media/)" "$note_root_dir"
 
 )   | while read -r file; do
-
-### Check if there are special symbols in file name or path which will break bash. Notify if true.
-if [[ $file = *[#\\\"]* ]] ; then 
-    notify fail "Bash-note: Bad file name" \
-      "$file_name contains special symbols and won't be processed by Bash-note."
-    continue 
-fi
 
 ### Check if the file is there or skip it.
 [[ -f "$file" ]] || continue 
@@ -716,45 +730,63 @@ file_name="${file##*/}"
 file_ext="${file_name##*.}"
 file_mime="$(file -ib "$file")"
 
+### Check if there are special symbols in file name or path which will break bash. Notify if true.
+if [[ $file = *[#\\\"]* ]] ; then 
+    notify fail "Bash-note: Bad file name" \
+      "$file_name contains special symbols and won't be processed by Bash-note."
+    continue 
+fi
 
 ## Web2note: converts web pages to markdown notes ##
 ##------------------------------------------------##
 
 if [[ $web2note_enabled = 1 ]] && [[ ! $file_path =~ "$web_page_files_dir_app" ]] \
-  && [[ $file_ext != "$main_note_extension" ]] && [[ $file_mime =~ text/html ]] ; then
+  && [[ $file_ext != "$main_note_extension" ]] && [[ $file_mime =~ text/html ]]; then
     
     ### Delay for browser to check that file is downloaded.
     sleep 1
     
-    ### Delete Firefox reader mode toolbar html code from the web page to be converted. 
+    ### Delete Firefox reader mode toolbar html code from the web page. 
     ### Then convert web page to html-less markdown with main note extension.
     sed '/<ul id="reader-toolbar" class="toolbar">/,/<\/li><\/ul><\/ul>/d' "$file" | iconv -sc -t utf-8 \
-      | pandoc -f html -t markdown_strict+pipe_tables-raw_html -o "${file%.*}"."$main_note_extension"
+      | pandoc -f html -t markdown_strict+pipe_tables-raw_html --wrap=none -o "${file%.*}"."$main_note_extension"
+    
+    ### Get image directory name
+    img_link=$(cat "${file%.*}"."$main_note_extension" | tr '\n' ' ' \
+      | grep -o -e '!\[[^]]*] *([^)]*)' | grep -m 1 "$web_page_files_dir_app")
+    img_link_path="${img_link#*(}"
+    img_link_path="${img_link_path%%$web_page_files_dir_app*}"
+    
+    ### Decode url to unicode symbols. 
+    ### Delete "?" from directory name because QOwnNotes won't render images in such directories.  
+    new_img_link_path="$(urldecode "$img_link_path")"
+    new_img_link_path="${new_img_link_path//'?'/}"
     
     ### Put "file://media/" before every image link, even if image tag is multi-line. 
     ### Images will be put to media directory in the next loop.
-    img_link=$(cat "${file%.*}"."$main_note_extension" | tr '\n' ' ' \
-      | grep -o -e '!\[[^]]*] *([^)]*)' | grep -m 1 "$web_page_files_dir_app")
-    img_link_path=${img_link#*(}
-    img_link_path=${img_link_path%%$web_page_files_dir_app*}
-    
-    sed -i "s|($img_link_path|(file://$media_path/$(urldecode $img_link_path)|g" "${file%.*}"."$main_note_extension"
+    sed -i "s|($img_link_path|(file://$media_path/$new_img_link_path|g" "${file%.*}"."$main_note_extension"
      
     ### Check if new note file is there. Show notification and remove converted web page.
     if [[ -f "${file%.*}"."$main_note_extension" ]]; then 
         notify done "Bash-note: Web page converted" "${file_name%.*} converted to note"
         rm "$file" 
-    else notify fail "Bash-note: Web page conversion failed" "${file_name%.*} conversion failed"
+    else 
+        notify fail "Bash-note: Web page conversion failed" "${file_name%.*} conversion failed"
     fi
 fi &
 
-if [[ $web2note_enabled = 1 ]] && [[ $file_path =~ "$web_page_files_dir_app" ]] ; then
+if [[ $web2note_enabled = 1 ]] && [[ $file_path =~ "$web_page_files_dir_app" ]]; then
     
     ### Get the relative path of the file beginning with DIRECTORY_files. 
     web_page_files_dir_name="${file_path%%$web_page_files_dir_app*}"
     web_page_files_dir_name="${web_page_files_dir_name##*/}"
     web_page_files_subdir="${file_path##*$web_page_files_dir_app}"
     web_page_files_relative_path="$web_page_files_dir_name$web_page_files_dir_app$web_page_files_subdir"
+    
+    ### Delete "?" from directory name because QOwnNotes won't render images in such directories.
+    ### Change spaces to "_" because Epsilon Notes don't support spaces in links.
+    web_page_files_relative_path="${web_page_files_relative_path//'?'/}"
+    web_page_files_relative_path="${web_page_files_relative_path//' '/'_'}"
     
     ### Delay for browser to check that file is downloaded.
     sleep 1
@@ -784,42 +816,73 @@ if [[ $fast_notes_merger_enabled = 1 ]] && [[ $file_path = "$fast_notes_merger_i
     mod_time_header=$(date '+%R %a %x' -r "$file")
     mod_time_compare=$(date '+%s' -r "$file")
  
-    ### If it's an image then format it as entry and move it to media directory. 
-    ### If it's not then get the content and delete it.
+    ### If file is an image then format it as entry and move it to media directory. 
+    ### If it's not then get the content and delete the file.
     if [[ $file_mime =~ image ]]; then 
         entry=$(printf '%s\n%s\n' "### $mod_time_header  " "![](file://$media_path/ImageNotes/$file_name)")
-        [[ $fast_notes_auto_rotate_images_enabled = 1 ]] && jhead -se -exonly -autorot "$file"
+        jhead -se -exonly -autorot "$file"
         mv -f "$file" "$note_root_dir/$media/ImageNotes"
     else 
         fast_note_text="$(cat "$file")"
         rm -f "$file"
     fi
     
-    ### If it has a http link as the first line then format it as bookmark. 
-    entry="$(printf '%s\n%s\n' "### $mod_time_header  " "$(check_for_link "$fast_note_text")")"
+    ### If there's a tag in fast note text get it to tag list and mark the note with it in array
+    if [[ -n $fast_notes_tag_marker ]]; then
+        
+        declare -A fast_notes_buffer
+        
+        ### Get all the tags and delete them form note text
+        fast_note_tags=$(printf '%s\n' "$fast_note_text" | grep -o "$fast_notes_tag_marker\w*")
+        fast_note_text="$(printf '%s\n' "$fast_note_text" | sed "s|$fast_notes_tag_marker\w*||g")"
+        
+        ### Make an array entry for each tag found
+        if [[ -n $fast_note_tags ]]; then
+            
+            for fast_note_tag in $fast_note_tags; do
+                fast_note_tag="${fast_note_tag#$fast_notes_tag_marker}"
+                fast_note_tag_list+=("$fast_note_tag")
+                entry="$(printf '%s\n%s\n' "### $mod_time_header  " "$(check_for_link "$fast_note_text")")"
+                fast_notes_buffer["$mod_time_compare:$fast_note_tag"]="$entry"
+            done
+        
+        ### If no tags found - make use special "has_no_tag" entry
+        else    
+            fast_note_tag_list+=('has_no_tag')
+            entry="$(printf '%s\n%s\n' "### $mod_time_header  " "$(check_for_link "$fast_note_text")")"
+            fast_notes_buffer["$mod_time_compare:has_no_tag"]="$entry"
+        fi
+    fi
+  
+    ### Delay for watch mode so merging won't stop in the middle of the cloud sync.
+    [[ $1 = -w ]] && sleep 2
     
-    ### Add fast note to buffer array.
-    fast_notes_buffer[$mod_time_compare]="$entry"
-    
-    ### Delay for all fast notes files to be synced to disk.
-    sleep 2
-    
-    ### After the processing the last fast note in inbox directory sort the buffer and prepare single entry.
+    ### After the processing the last fast note sort the buffer and prepare single entry for each tag.
     if [[ -z $(find $fast_notes_merger_inbox_dir -maxdepth 1 -name "*.$fast_notes_extension") ]]; then
+        
+        for tag in $(printf '%s\n' "${fast_note_tag_list[@]}" | sort | uniq); do
+            
+            for buffered_entry in $(printf '%s\n' "${!fast_notes_buffer[@]}" | grep ":$tag" | sort); do
                 
-        for buffered_entry in $(printf '%s\n' "${!fast_notes_buffer[@]}" | sort); do
-            [ $fast_notes_sorting_mode = newer_first ] \
-                && merged_entry="$(printf '%s\n\n' "${fast_notes_buffer[$buffered_entry]}" "$merged_entry")"
-            [ $fast_notes_sorting_mode = older_first ] \
-                && merged_entry+="$(printf '\n\n%s' "${fast_notes_buffer[$buffered_entry]}")"
+                [[ $fast_notes_sorting_mode = newer_first ]] \
+                    && merged_entry="$(printf '%s\n\n' "${fast_notes_buffer[$buffered_entry]}" "$merged_entry")"
+                [[ $fast_notes_sorting_mode = older_first ]] \
+                    && merged_entry+="$(printf '\n\n%s' "${fast_notes_buffer[$buffered_entry]}")"
+            done
+            
+            ### Write each entry to appropriate note file.
+            [[ $tag != 'has_no_tag' ]] && tag_inbox_file_name="$tag.$main_note_extension" \
+              || tag_inbox_file_name="$fast_notes_inbox_file_name"
+            
+            add_to_inbox "$merged_entry" "$fast_notes_sorting_mode" "$tag_inbox_file_name"
+            
+            unset -v merged_entry
         done
         
-        ### Write entry to inbox note file with function.
-        add_to_inbox "$merged_entry" "$fast_notes_sorting_mode" "$fast_notes_inbox_file_name"
-
         notify fast "Bash-note" "Fast notes added"
-        unset -v fast_notes_buffer merged_entry
+        unset -v fast_notes_buffer
     fi
 fi
 
-done ### It's the final "done" of file watcher loop.
+done ### It's the final "done" of file scanner loop.
+fi
