@@ -1,32 +1,29 @@
 # Bash-note
 
-Bash-note is as set of small scripts called modules.
+Bash-note is as shell script for GNU/Linux to help you dealing with plain-text markdown notes.
 
-There are two types of modules:  
-1) Modules ran by running bash-note with specific argument;  
-2) Modules ran by file system watcher for specific file types.
+Bash-note can:
+- Paste selected text blocks to markdown note, images included;
+- Convert saved web pages to markdown notes;
+- Merge "fast notes" into single inbox note in a smart manner;
+- Process/convert markdown links.
 
-Bash-note will run only on GNU/Linux.
+Paired with [QOwnNotes](https://github.com/pbek/QOwnNotes) and the special script for that app, Bash-note knows the note currently opened in QOwnNotes and can paste selected text there without openning QOwnNotes itself. Make sure you've put path to Bash-note file to the QOwnNotes script file.
 
 Before running the script you should open it and check config section for set options. The most important is `note_root_dir` which is the directory where you store markdown notes.  
 This directory can be a symlink, anything inside it however should be real files or hardlinks.
 
-You can see all Bash-note command line arguments by running `bash-note -h`.
+## Using Bash-note
 
-## 1. Modules ran by command line argument 
+You can see all Bash-note command line arguments by running `bash-note -h`. This will also show if all requred binaries/packages are present in the system. 
 
-### Dependency check
-Dependencies: none  
-Usage: `bash-note -d`
-
-Shows the names of packages required by each module and checks if needed binaries are already present.  
-Good to check at first run.
+Bash-note requres: xclip, gettext, pandoc, wget, inotify-tools, jhead.
 
 ### Import settings
 Deficiencies: none  
 Usage: `bash-note -i FILE` 
 
-Import Bash-note settings from FILE. This module is useful for updating Bash-note:  
+Import Bash-note settings from FILE. Thi is useful for updating Bash-note:  
 1) Rename old version of bash-note to `bash-note.old` (or any other name);  
 2) Put a new version file to the directory;  
 3) Run `bash-note -i bash-note.old` and all existing settings will be imported to the new script.
@@ -39,17 +36,17 @@ bash-note -c            Run Clipnote module with inbox file set in config sectio
 bash-note -c FILE       Run Clipnote module with FILE as inbox file
 ``` 
 
-Clipnote copies text block selected in any application (browser, text editor, etc.) to the note file set in config section or by command line arguments. 
-
-The best way to use it is binding `bash-note -c` to a keystroke using you DE instruments and then using it as you use clipboard. I use it assigned to `Win+C`.
-
-When used with browser Clipnote will also copies all images in selection.
-
 1) Select any part of web page or document, including images;  
 2) Run `bash-note -c` by keystroke or in terminal;  
 3) The text block is in your note. 
 
-By setting `FILE` with command line argument you can have different keystrokes for different note files.
+Clipnote pastes text block selected in any application (browser, text editor, etc.) to the note file set in config section or by command line arguments. When used with browser Clipnote will also paste all images in selection.
+
+The provided QOwnNotes script will continously change note in config secion to currently opened note.
+
+The best way to use it is binding `bash-note -c` to a keystroke using you DE instruments, and then using it as you use clipboard. I use it assigned to `Win+C`. You can also assign other keys, like `Win+V` to a `bash-note -c FILE` to put selected text to that predefined FILE.
+
+TODO Rewrite later text
 
 ### Relink
 Dependencies: none  
