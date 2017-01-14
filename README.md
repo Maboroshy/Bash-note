@@ -15,7 +15,8 @@ This directory can be a symlink, anything inside it however should be real files
 
 ## Using Bash-note
 
-You can see all Bash-note command line arguments by running `bash-note -h`. This will also show if all requred binaries/packages are present in the system. 
+You can see all Bash-note command line arguments by running `bash-note -h`. 
+This also shows if all requred binaries/packages are present in the system. 
 
 Bash-note requres: xclip, gettext, pandoc, wget, inotify-tools, jhead.
 
