@@ -56,13 +56,13 @@ If selected text is web URL, Bash-note considers it as "bookmark" and pastes URL
 
 ### Convert web pages to markdown notes
 Dependencies: iconv, pandoc  
-Usage: by "file scanner" with `bash-note -s` for single run or `bash-note -w` for continious directory watch.
+Usage: by "file scanner" with `bash-note -s` for single run or `bash-note -w` for continious directory watch.  
 Processed files: web pages and their "_files" directories saved to any directory inside note root.
 
 1) Open web page in browser;  
 2) (Optional) Use "Reader view";  
 3) Save web page to any directory inside note root; 
-4) Run Bash-note file scanner by `bash-note -s` or `bash-note -w`;
+4) Run Bash-note file scanner by `bash-note -s` or `bash-note -w`;  
 5) Web page is a markdown note now.
 
 Bash-note will convert any web page it finds in note root directory to a markdown note.  
