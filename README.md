@@ -49,8 +49,7 @@ Bash-note can paste text block selected in any application (browser, text editor
 
 The provided QOwnNotes script will continously change note in config secion to currently opened note.
 
-The best way to use it is binding `bash-note -c` to a key shortcut using you DE instruments or third-party app, and then using it as you use clipboard.  
-I use it assigned to `Win+C`. You can also assign other keys, like `Win+V` to a `bash-note -c FILE` to put selected text to that predefined FILE.
+The best way to use it is binding `bash-note -c` to a key shortcut using you DE instruments or third-party app, and then using it as you use clipboard. I use it assigned to `Win+C`. You can also assign other keys, like `Win+V`, to a `bash-note -c FILE` to put selected text to that predefined FILE.
 
 If selected text is web URL, Bash-note considers it as "bookmark" and pastes URL target title and icon as a link to that URL.
 
@@ -61,7 +60,7 @@ Processed files: web pages and their "_files" directories saved to any directory
 
 1) Open web page in browser;  
 2) (Optional) Use "Reader view";  
-3) Save web page to any directory inside note root; 
+3) Save web page to any directory inside note root;  
 4) Run Bash-note file scanner by `bash-note -s` or `bash-note -w`;  
 5) Web page is a markdown note now.
 
