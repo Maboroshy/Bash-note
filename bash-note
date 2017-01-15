@@ -49,7 +49,7 @@ icon_warning="emblem-warning.svg"
 ##---------------------------------------------##
 
 # Put inbox note file name here. Can have absolute path, otherwise file will be stored in note root directory.
-clipnote_inbox_file_name='/storage/emulated/0/notes/Входящие/!Inbox.md'
+clipnote_inbox_file_name='/storage/emulated/0/notes/!Inbox.md'
 
 
 ## Convert web pages to markdown notes ##
@@ -73,11 +73,11 @@ fast_notes_merger_enabled=1
 fast_notes_extension=txt
 
 # Inbox directory. All "fast notes" and images put there will be added to inbox note. Absolute path.
-fast_notes_merger_inbox_dir="$note_root_dir/Входящие"
+fast_notes_merger_inbox_dir="$note_root_dir/Inbox"
 
 # Put inbox note file name here. Can have absolute path, otherwise will be stored in inbox directory. 
 # Can be the same as for Clipnote module.
-fast_notes_inbox_file_name='/storage/emulated/0/notes/Входящие/!Inbox.md'
+fast_notes_inbox_file_name='/storage/emulated/0/notes/!Inbox.md'
 
 # Entry sorting mode: newer_first or older_first
 fast_notes_sorting_mode=newer_first
