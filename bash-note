@@ -29,7 +29,7 @@ main_note_extension="md"
 
 # Type of links Bash-note modules will generate while processing notes: "absolute" or "relative".
 # QOwnNotes generates relative links but also handles absolute without issues.
-# Most markdown editors won't work with relative links so use "absolute" if you need portability.
+# Most markdown editors won't work with relative links, so use "absolute" if you need portability.
 preferred_link_type="relative"
 
 
@@ -45,15 +45,15 @@ icon_success="emblem-success.svg"
 icon_warning="emblem-warning.svg"
 
 
-## Clipnote: pastes selected text to note ##
-##----------------------------------------##
+## Paste selected text blocks to markdown note ##
+##---------------------------------------------##
 
 # Put inbox note file name here. Can have absolute path, otherwise file will be stored in note root directory.
-clipnote_inbox_file_name='/storage/emulated/0/notes/Компьютер/Coding/Подводные камни Bash.md'
+clipnote_inbox_file_name='/storage/emulated/0/notes/Входящие/!Inbox.md'
 
 
-## Web2note: converts web pages to markdown notes ##
-##------------------------------------------------##
+## Convert web pages to markdown notes ##
+##-------------------------------------##
 
 # Put 1 to enable, anything other do disable.
 web2note_enabled=1
@@ -63,8 +63,8 @@ web2note_enabled=1
 web_page_files_dir_app="_files"
 
 
-## Fast notes merger: adds fast notes and images to a single main note ##
-##---------------------------------------------------------------------##
+## Merge "fast notes" into single "inbox" note ##
+##---------------------------------------------##
 
 # Put 1 to enable, anything other do disable.
 fast_notes_merger_enabled=1
@@ -192,8 +192,8 @@ if [[ $note_root_dir = */.* ]] ; then
     exit
 fi
 
-## Clipnote: pastes selected text to note ## 
-##----------------------------------------##
+## Paste selected text blocks to markdown note ##
+##---------------------------------------------##
 
 if [[ $1 = -c ]]; then
 
@@ -217,8 +217,8 @@ fi
 
 if [[ -z "$1" || $1 = "-s" ]]; then
 
-    ## Fast notes merger: adds fast notes and images to a single main note ##
-    ##---------------------------------------------------------------------##
+    ## Merge "fast notes" into single "inbox" note ##
+    ##---------------------------------------------##
 
     ### Check if "fast notes" extension is different from main notes extension. 
     ### That may save main notes from assembling into a single Devastator Note Prime.
@@ -346,8 +346,8 @@ if [[ $1 = -i ]] && [[ -n "$2" ]]; then
     "Settings from $2 imported to current script."
 fi
 
-## Clipnote: pastes selected text to note ##
-##----------------------------------------##
+## Paste selected text blocks to markdown note ##
+##---------------------------------------------##
 
 if [[ $1 = -c ]]; then
     
@@ -398,8 +398,8 @@ if [[ $1 = -c ]]; then
     exit
 fi
 
-## Relink: find and process links and linked files ##
-##-------------------------------------------------##
+## Process/convert markdown links ##
+##--------------------------------##
 
 if [[ $1 = -l ]]; then
 
@@ -737,8 +737,8 @@ if [[ $file = *[#\\\"]* ]] ; then
     continue 
 fi
 
-## Web2note: converts web pages to markdown notes ##
-##------------------------------------------------##
+## Convert web pages to markdown notes ##
+##-------------------------------------##
 
 if [[ $web2note_enabled = 1 ]] && [[ ! $file_path =~ "$web_page_files_dir_app" ]] \
   && [[ $file_ext != "$main_note_extension" ]] && [[ $file_mime =~ text/html ]]; then
@@ -804,8 +804,8 @@ if [[ $web2note_enabled = 1 ]] && [[ $file_path =~ "$web_page_files_dir_app" ]];
     rm -d "$file_path"
 fi &
     
-## Fast notes merger: adds fast notes and images to a single main note ##
-##---------------------------------------------------------------------##
+## Merge "fast notes" into single "inbox" note ##
+##---------------------------------------------##
 
 if [[ $fast_notes_merger_enabled = 1 ]] && [[ $file_path = "$fast_notes_merger_inbox_dir" ]] \
   && [[ $fast_notes_extension = "$file_ext" || $file_mime =~ image ]]; then
