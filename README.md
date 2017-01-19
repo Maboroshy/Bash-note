@@ -42,14 +42,14 @@ bash-note -c t FILE  Add selected text or part of web page to the top of a FILE,
 ``` 
 
 1) Select any part of web page or document, including images;  
-2) Run `bash-note -td` by binded key shortcut or in terminal;  
+2) Run `bash-note -c td` by binded key shortcut or in terminal;  
 3) The text block is in your note. 
 
 Bash-note can paste text block selected in any application (browser, text editor, etc.) to the note file set in config section or by command line arguments. When used with browser Clipnote will also paste all images in selection.
 
 The provided QOwnNotes script will continously change note in config secion to currently opened note.
 
-The best way to use it is binding `bash-note -c` to a key shortcut using you DE instruments or third-party app, and then using it as you use clipboard. I use it assigned to `Win+C`. You can also assign other keys, like `Win+V`, to a `bash-note -c FILE` to put selected text to that predefined FILE.
+The best way to use it is binding `bash-note -c td` to a key shortcut using you DE instruments or third-party app, and then using it as you use clipboard. I use it assigned to `Win+C`. You can also assign other keys, like `Win+V`, to a `bash-note -c td FILE` to put selected text to that predefined FILE.
 
 If selected text is web URL, Bash-note considers it as "bookmark" and pastes URL target title and icon as a link to that URL.
 
