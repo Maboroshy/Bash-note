@@ -71,7 +71,7 @@ Modern web pages are very cluttered. The easiest way to get a clean note is savi
 
 There are two Firefox extensions that make the usage of this module more efficient:  
 [Save File to](https://addons.mozilla.org/en/firefox/addon/save-file-to/) by Atte Kemppilä - adds new context menu items to quickly save web page to desired directory.  
-[Stylish](https://addons.mozilla.org/en/firefox/addon/stylish/?src=search) with [Reader Mode Button Always Visible](https://userstyles.org/styles/123290/reader-mode-button-always-visible) userstyle - forces "Reader view" for every page or  
+[Stylish](https://addons.mozilla.org/en/firefox/addon/stylish/?src=search) with [Reader Mode Button Always Visible](https://userstyles.org/styles/123290/reader-mode-button-always-visible) userstyle - forces "Reader view" avialbility for every page or  
 [Open in Reader View](https://addons.mozilla.org/en/firefox/addon/reader-view/) by rNeomy - adds context menu items to use "Reader view" even on pages Firefox doesn't allow to. 
 
 With this extensions the experience of using Bash-note with browser is close to the one of web clippers. Reader mode removes all the clutter and "save to" context menu allows to save web page to any directory by 2 clicks.
