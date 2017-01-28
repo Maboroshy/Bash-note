@@ -85,7 +85,7 @@ fast_notes_sorting_mode=newer_first
 # If a word in a fast note begins with a set characters this word is considered as a tag. Tags can't have spaces.
 # Fast note with a tag will be added to a note in inbox directory named like the tag. 
 # Fast notes can have multiple tags. Leave empty to disable tagging.
-fast_notes_tag_marker=',,'
+fast_notes_tag_marker='@@'
 
 
 ##########################################################################
