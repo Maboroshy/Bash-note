@@ -95,9 +95,9 @@ Any image put to "inbox" note, like the photo of some document or phone number, 
 
 Bash-note will put the content of all the "fast note" to a single note set in the Bash-note file and then delete them.
 
-"Fast notes" can be tagged by putting words beggining with symbols set in config section of Bash-note to the text. Default is `,,`. Tags can't have spaces. There can be multiple tags.  
+"Fast notes" can be tagged by putting words beggining with symbols set in config section of Bash-note to the text. Default is `@@`. Tags can't have spaces. There can be multiple tags.  
 The "fast note" with a tag will be merged to the file with the same name.  
-So if you want to note some idea about using bash-note, you can put `,,bash-note` after your idea. All such notes will be merged to a single `bash-note.md`.
+So if you want to note some idea about using bash-note, you can put `@@bash-note` after your idea. All such notes will be merged to a single `bash-note.md`.
 
 ### Process markdown links
 Dependencies: none  
