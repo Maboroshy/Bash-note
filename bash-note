@@ -761,6 +761,7 @@ if [[ $web2note_enabled = 1 ]] && [[ ! $file_path =~ "$web_page_files_dir_app" ]
     ### Delete "?" from directory name because QOwnNotes won't render images in such directories.  
     new_img_link_path="$(urldecode "$img_link_path")"
     new_img_link_path="${new_img_link_path//'?'/}"
+    new_img_link_path="${new_img_link_path//' '/'_'}"
     
     ### Put "file://media/" before every image link, even if image tag is multi-line. 
     ### Images will be put to media directory in the next loop.
